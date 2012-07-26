@@ -1,0 +1,29 @@
+#!/bin/bash
+
+successProbability=0.9
+
+if [ $# -le 2 ]; then
+  echo Usage: $0 data_set_file query_set_file params_file
+  exit
+fi
+
+nDataSet=` wc -l "$1"`                                                  #取数据集的行数 结果为 nDataSet=1000 mnistlk.dts
+for x in $nDataSet; do nDataSet=$x; break; done                         #nDataSet=1000
+nQuerySet=` wc -l "$2"`                                                 #nQuerySet=9 mnistlk.q
+for x in $nQuerySet; do nQuerySet=$x; break; done  $nQuerySet=9
+dimension=`head -1 "$1" | wc -w`                                        #去数据集的第一行，统计词的个数
+
+#echo $nDataSet $nQuerySet $dimension
+
+if [ -e bin/mem ]; then    #如果bin/mem存在
+  m=`cat bin/mem`;
+else
+  s=`free -m | grep "Mem:"`                                             #以兆为单位显示，物理内存和交换内存空闲和已经使用的
+  for i in $s; do m=$i; if [ "$i" != "Mem:" ]; then break; fi; done      #取出总的内存空间
+  m=${m}000000                              #加6个0，转换成字节
+  echo $m > bin/mem           
+fi
+
+#调用LSHMain 传递10个参数 1）数据集个数 1000 (2）查询集个数 9 （3）维度 784  (4)成功率 0.9 (5)半径1.0 (6) 数据集 （7）查询集 （8）内存大小 （9） -p 标记 （10）参数文件 paraFile
+#-p标记用于进入LSHMain中的一个if 语句，与lsh_computeParams中的LSHMain做对比，参数文件为lsh_computeParams的输出结果
+bin/LSHMain $nDataSet $nQuerySet $dimension $successProbability 1.0 "$1" "$2" $m -p "$3"
