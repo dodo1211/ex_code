@@ -100,27 +100,27 @@ void initHashFunctions(PRNearNeighborStructT nnStruct){
   ASSERT(nnStruct != NULL);
   LSHFunctionT **lshFunctions;
   // allocate memory for the functions
-  FAILIF(NULL == (lshFunctions = (LSHFunctionT**)MALLOC(nnStruct->nHFTuples * sizeof(LSHFunctionT*))));
+  FAILIF(NULL == (lshFunctions = (LSHFunctionT**)MALLOC(nnStruct->nHFTuples * sizeof(LSHFunctionT*))));  //根据使用哈希函数的个数L分配内存
   for(IntT i = 0; i < nnStruct->nHFTuples; i++){
-    FAILIF(NULL == (lshFunctions[i] = (LSHFunctionT*)MALLOC(nnStruct->hfTuplesLength * sizeof(LSHFunctionT))));
+    FAILIF(NULL == (lshFunctions[i] = (LSHFunctionT*)MALLOC(nnStruct->hfTuplesLength * sizeof(LSHFunctionT)))); //根据k来分配
     for(IntT j = 0; j < nnStruct->hfTuplesLength; j++){
-      FAILIF(NULL == (lshFunctions[i][j].a = (RealT*)MALLOC(nnStruct->dimension * sizeof(RealT))));
+      FAILIF(NULL == (lshFunctions[i][j].a = (RealT*)MALLOC(nnStruct->dimension * sizeof(RealT)))); //根据维度来分配内存，a为首地址
     }
   }
 
   // initialize the LSH functions
-  for(IntT i = 0; i < nnStruct->nHFTuples; i++){
+  for(IntT i = 0; i < nnStruct->nHFTuples; i++){ //将产生L个hash族函数，每个族函数由k个hash函数组成，这k个个hash函数对每一维进行处理
     for(IntT j = 0; j < nnStruct->hfTuplesLength; j++){
       // vector a
       for(IntT d = 0; d < nnStruct->dimension; d++){
 #ifdef USE_L1_DISTANCE
-	lshFunctions[i][j].a[d] = genCauchyRandom();
+	lshFunctions[i][j].a[d] = genCauchyRandom();  //1-stable //对于L1 norm的没有实现。
 #else
-	lshFunctions[i][j].a[d] = genGaussianRandom();
+	lshFunctions[i][j].a[d] = genGaussianRandom();  //2-stable //返回一个正态分布随机因子
 #endif
       }
       // b
-      lshFunctions[i][j].b = genUniformRandom(0, nnStruct->parameterW);
+      lshFunctions[i][j].b = genUniformRandom(0, nnStruct->parameterW);  //产生一个随机数
     }
   }
 
@@ -128,46 +128,47 @@ void initHashFunctions(PRNearNeighborStructT nnStruct){
 }
 
 // Initializes the fields of a R-near neighbors data structure except
-// the hash tables for storing the buckets.
-PRNearNeighborStructT initializePRNearNeighborFields(RNNParametersT algParameters, Int32T nPointsEstimate){
+// the hash tables for storing the buckets. //对RNN数据结果哈希表存储桶的初始化。
+PRNearNeighborStructT initializePRNearNeighborFields(RNNParametersT algParameters, Int32T nPointsEstimate){  
   PRNearNeighborStructT nnStruct;
   FAILIF(NULL == (nnStruct = (PRNearNeighborStructT)MALLOC(sizeof(RNearNeighborStructT))));
   nnStruct->parameterR = algParameters.parameterR;
   nnStruct->parameterR2 = algParameters.parameterR2;
   nnStruct->useUfunctions = algParameters.useUfunctions;
   nnStruct->parameterK = algParameters.parameterK;
-  if (!algParameters.useUfunctions) {
+  if (!algParameters.useUfunctions) {  //如果u函数为0，使用普通g函数
     // Use normal <g> functions.
     nnStruct->parameterL = algParameters.parameterL;
-    nnStruct->nHFTuples = algParameters.parameterL;
-    nnStruct->hfTuplesLength = algParameters.parameterK;
+    nnStruct->nHFTuples = algParameters.parameterL; //使用L个元组，即 使用L个哈希函数
+    nnStruct->hfTuplesLength = algParameters.parameterK;  //每个哈希函数中元组长度为k个
   }else{
     // Use <u> hash functions; a <g> function is a pair of 2 <u> functions.
-    nnStruct->parameterL = algParameters.parameterL;
-    nnStruct->nHFTuples = algParameters.parameterM;
-    nnStruct->hfTuplesLength = algParameters.parameterK / 2;
+    nnStruct->parameterL = algParameters.parameterL; 
+    nnStruct->nHFTuples = algParameters.parameterM; //使用M个元组，hashing函数
+    nnStruct->hfTuplesLength = algParameters.parameterK / 2;  //每个哈希函数中元组长度为k/2个
   }
-  nnStruct->parameterT = algParameters.parameterT;
+  nnStruct->parameterT = algParameters.parameterT;  //数据集的数量
   nnStruct->dimension = algParameters.dimension;
   nnStruct->parameterW = algParameters.parameterW;
 
   nnStruct->nPoints = 0;
-  nnStruct->pointsArraySize = nPointsEstimate;
+  nnStruct->pointsArraySize = nPointsEstimate;  //根据点的个数，确定点数组的大小
 
-  FAILIF(NULL == (nnStruct->points = (PPointT*)MALLOC(nnStruct->pointsArraySize * sizeof(PPointT))));
+  FAILIF(NULL == (nnStruct->points = (PPointT*)MALLOC(nnStruct->pointsArraySize * sizeof(PPointT)))); //若分配空间失败 
 
   // create the hash functions
   initHashFunctions(nnStruct);
 
   // init fields that are used only in operations ("temporary" variables for operations).
 
-  // init the vector <pointULSHVectors> and the vector
-  // <precomputedHashesOfULSHs>
-  FAILIF(NULL == (nnStruct->pointULSHVectors = (Uns32T**)MALLOC(nnStruct->nHFTuples * sizeof(Uns32T*))));
+  // init the vector <pointULSHVectors> and the vector <precomputedHashesOfULSHs>
+  //<pointULSHVectors>是用来存储函数u<hfTuplesLength>-tuple of LSH fuctions,即k,用来连接g函数。
+  //  <precomputedHashesOfULSHs>Precomputed hashes of each of the <nHFTuples> of <u> functions (to be used by the bucket hashing module).
+  FAILIF(NULL == (nnStruct->pointULSHVectors = (Uns32T**)MALLOC(nnStruct->nHFTuples * sizeof(Uns32T*))));  
   for(IntT i = 0; i < nnStruct->nHFTuples; i++){
-    FAILIF(NULL == (nnStruct->pointULSHVectors[i] = (Uns32T*)MALLOC(nnStruct->hfTuplesLength * sizeof(Uns32T))));
+    FAILIF(NULL == (nnStruct->pointULSHVectors[i] = (Uns32T*)MALLOC(nnStruct->hfTuplesLength * sizeof(Uns32T)))); //使用u函数是分配？
   }
-  FAILIF(NULL == (nnStruct->precomputedHashesOfULSHs = (Uns32T**)MALLOC(nnStruct->nHFTuples * sizeof(Uns32T*))));
+  FAILIF(NULL == (nnStruct->precomputedHashesOfULSHs = (Uns32T**)MALLOC(nnStruct->nHFTuples * sizeof(Uns32T*)))); //普通函数分配？
   for(IntT i = 0; i < nnStruct->nHFTuples; i++){
     FAILIF(NULL == (nnStruct->precomputedHashesOfULSHs[i] = (Uns32T*)MALLOC(N_PRECOMPUTED_HASHES_NEEDED * sizeof(Uns32T))));
   }
@@ -211,12 +212,12 @@ void preparePointAdding(PRNearNeighborStructT nnStruct, PUHashStructureT uhash, 
 // the points <dataSet> will be contained in the resulting DS).
 // Currenly only type HT_HYBRID_CHAINS is supported for this
 // operation.
-PRNearNeighborStructT initLSH_WithDataSet(RNNParametersT algParameters, Int32T nPoints, PPointT *dataSet){
+PRNearNeighborStructT initLSH_WithDataSet(RNNParametersT algParameters, Int32T nPoints, PPointT *dataSet){  //至297行
   ASSERT(algParameters.typeHT == HT_HYBRID_CHAINS);
   ASSERT(dataSet != NULL);
   ASSERT(USE_SAME_UHASH_FUNCTIONS);
 
-  PRNearNeighborStructT nnStruct = initializePRNearNeighborFields(algParameters, nPoints);
+  PRNearNeighborStructT nnStruct = initializePRNearNeighborFields(algParameters, nPoints); //参数集，点的个数
 
   // Set the fields <nPoints> and <points>.
   nnStruct->nPoints = nPoints;
@@ -229,19 +230,19 @@ PRNearNeighborStructT initLSH_WithDataSet(RNNParametersT algParameters, Int32T n
   Uns32T *mainHashA = NULL, *controlHash1 = NULL;
   PUHashStructureT modelHT = newUHashStructure(HT_LINKED_LIST, nPoints, nnStruct->parameterK, FALSE, mainHashA, controlHash1, NULL);
   
-  Uns32T **(precomputedHashesOfULSHs[nnStruct->nHFTuples]);
-  for(IntT l = 0; l < nnStruct->nHFTuples; l++){
-    FAILIF(NULL == (precomputedHashesOfULSHs[l] = (Uns32T**)MALLOC(nPoints * sizeof(Uns32T*))));
-    for(IntT i = 0; i < nPoints; i++){
+  Uns32T **(precomputedHashesOfULSHs[nnStruct->nHFTuples]);   //预处理hashing
+  for(IntT l = 0; l < nnStruct->nHFTuples; l++){ //给L个hash分配内存
+    FAILIF(NULL == (precomputedHashesOfULSHs[l] = (Uns32T**)MALLOC(nPoints * sizeof(Uns32T*)))); //每次hash需要这么多内存
+    for(IntT i = 0; i < nPoints; i++){   //对每个点做hashing,需要的内存
       FAILIF(NULL == (precomputedHashesOfULSHs[l][i] = (Uns32T*)MALLOC(N_PRECOMPUTED_HASHES_NEEDED * sizeof(Uns32T))));
     }
   }
 
   for(IntT i = 0; i < nPoints; i++){
-    preparePointAdding(nnStruct, modelHT, dataSet[i]);
+    preparePointAdding(nnStruct, modelHT, dataSet[i]); //对每个数据点进行处理，将d维的数据映射成整数。对点的一级映射、二级映射，物理块的映射
     for(IntT l = 0; l < nnStruct->nHFTuples; l++){
       for(IntT h = 0; h < N_PRECOMPUTED_HASHES_NEEDED; h++){
-	precomputedHashesOfULSHs[l][i][h] = nnStruct->precomputedHashesOfULSHs[l][h];
+		precomputedHashesOfULSHs[l][i][h] = nnStruct->precomputedHashesOfULSHs[l][h]; //将每个映射的点映射到对应的hashing桶中。
       }
     }
   }
@@ -258,11 +259,13 @@ PRNearNeighborStructT initLSH_WithDataSet(RNNParametersT algParameters, Int32T n
       if (!nnStruct->useUfunctions) {
 	// Use usual <g> functions (truly independent; <g>s are precisly
 	// <u>s).
-	addBucketEntry(modelHT, 1, precomputedHashesOfULSHs[i][p], NULL, p);
-      } else {
+		addBucketEntry(modelHT, 1, precomputedHashesOfULSHs[i][p], NULL, p);  //把点加到桶中，k
+      } else {  // k/2,因为g函数不独立，重复计算两部分的值？？g函数是怎样不独立的？？
 	// Use <u> functions (<g>s are pairs of <u> functions).
-	addBucketEntry(modelHT, 2, precomputedHashesOfULSHs[firstUComp][p], precomputedHashesOfULSHs[secondUComp][p], p);
-      }
+		  //该函数产生第三个参数，并写入参数文件。即为-c产生，作为-p的第十个参数
+		addBucketEntry(modelHT, 2, precomputedHashesOfULSHs[firstUComp][p], precomputedHashesOfULSHs[secondUComp][p], p);
+       
+	  }
     }
 
     //ASSERT(nAllocatedGBuckets <= nPoints);
@@ -412,31 +415,31 @@ inline void computeULSH(PRNearNeighborStructT nnStruct, IntT gNumber, RealT *poi
   for(IntT i = 0; i < nnStruct->hfTuplesLength; i++){
     RealT value = 0;
     for(IntT d = 0; d < nnStruct->dimension; d++){
-      value += point[d] * nnStruct->lshFunctions[gNumber][i].a[d];
+      value += point[d] * nnStruct->lshFunctions[gNumber][i].a[d];  //将每个向量的总值加起来，a[d]里面存储的是一个服从p-stable分布的随机数，b里面存储了也是一个随机数[0，w]
     }
-  
-    vectorValue[i] = (Uns32T)(FLOOR_INT32((value + nnStruct->lshFunctions[gNumber][i].b) / nnStruct->parameterW) /* - MIN_INT32T*/);
+     //将d维向量v映射成一个整数，在这里可能是浮点数。
+    vectorValue[i] = (Uns32T)(FLOOR_INT32((value + nnStruct->lshFunctions[gNumber][i].b) / nnStruct->parameterW) /* - MIN_INT32T*/); //公式(a+b)/w 
   }
 }
 
-inline void preparePointAdding(PRNearNeighborStructT nnStruct, PUHashStructureT uhash, PPointT point){
+inline void preparePointAdding(PRNearNeighborStructT nnStruct, PUHashStructureT uhash, PPointT point){ //uhash为hash桶的结构，point为点的具体值
   ASSERT(nnStruct != NULL);
   ASSERT(uhash != NULL);
   ASSERT(point != NULL);
 
-  TIMEV_START(timeComputeULSH);
+  TIMEV_START(timeComputeULSH);  //开始计时
   for(IntT d = 0; d < nnStruct->dimension; d++){
-    nnStruct->reducedPoint[d] = point->coordinates[d] / nnStruct->parameterR;
+    nnStruct->reducedPoint[d] = point->coordinates[d] / nnStruct->parameterR;  //将点的维度除以半径，用于放大或者缩小点的值。？？
   }
 
   // Compute all ULSH functions.
-  for(IntT i = 0; i < nnStruct->nHFTuples; i++){
-    computeULSH(nnStruct, i, nnStruct->reducedPoint, nnStruct->pointULSHVectors[i]);
+  for(IntT i = 0; i < nnStruct->nHFTuples; i++){ //进行L次，将每个d维点，映射成一个数
+    computeULSH(nnStruct, i, nnStruct->reducedPoint, nnStruct->pointULSHVectors[i]); 
   }
 
-  // Compute data for <precomputedHashesOfULSHs>.
+  // Compute data for <precomputedHashesOfULSHs>.   
   if (USE_SAME_UHASH_FUNCTIONS) {
-    for(IntT i = 0; i < nnStruct->nHFTuples; i++){
+    for(IntT i = 0; i < nnStruct->nHFTuples; i++){  //重复L次，hash表及其桶的结构准备好，并将点存入桶中
       precomputeUHFsForULSH(uhash, nnStruct->pointULSHVectors[i], nnStruct->hfTuplesLength, nnStruct->precomputedHashesOfULSHs[i]);
     }
   }
@@ -528,7 +531,7 @@ inline BooleanT isDistanceSqrLeq(IntT dimension, PPointT p1, PPointT p2, RealT t
 
   TIMEV_START(timeDistanceComputation);
   for (IntT i = 0; i < dimension; i++){
-    RealT temp = p1->coordinates[i] - p2->coordinates[i];
+    RealT temp = p1->coordinates[i] - p2->coordinates[i]; //计算每一维度的差值
 #ifdef USE_L1_DISTANCE
     result += ABS(temp);
 #else
@@ -574,7 +577,7 @@ Int32T getNearNeighborsFromPRNearNeighborStruct(PRNearNeighborStructT nnStruct, 
   ASSERT(nnStruct != NULL);
   ASSERT(query != NULL);
   ASSERT(nnStruct->reducedPoint != NULL);
-  ASSERT(!nnStruct->useUfunctions || nnStruct->pointULSHVectors != NULL);
+  ASSERT(!nnStruct->useUfunctions || nnStruct->pointULSHVectors != NULL);  //本代码中U函数为Ture，所以pointULSHVector不会为空
 
   PPointT point = query;
 
@@ -583,15 +586,15 @@ Int32T getNearNeighborsFromPRNearNeighborStruct(PRNearNeighborStructT nnStruct, 
     FAILIF(NULL == (result = (PPointT*)MALLOC(resultSize * sizeof(PPointT))));
   }
   
-  preparePointAdding(nnStruct, nnStruct->hashedBuckets[0], point);
+  preparePointAdding(nnStruct, nnStruct->hashedBuckets[0], point); //将高维点映射为一个数，并将数加入对应的桶中。将产生L个hash表结构,??具体细节还需要了解
 
   Uns32T precomputedHashesOfULSHs[nnStruct->nHFTuples][N_PRECOMPUTED_HASHES_NEEDED];
-  for(IntT i = 0; i < nnStruct->nHFTuples; i++){
-    for(IntT j = 0; j < N_PRECOMPUTED_HASHES_NEEDED; j++){
+  for(IntT i = 0; i < nnStruct->nHFTuples; i++){  //L
+    for(IntT j = 0; j < N_PRECOMPUTED_HASHES_NEEDED; j++){  //点的数的两倍
       precomputedHashesOfULSHs[i][j] = nnStruct->precomputedHashesOfULSHs[i][j];
     }
   }
-  TIMEV_START(timeTotalBuckets);
+  TIMEV_START(timeTotalBuckets);   //生成桶的时间？
 
   BooleanT oldTimingOn = timingOn;
   if (noExpensiveTiming) {
@@ -605,28 +608,28 @@ Int32T getNearNeighborsFromPRNearNeighborStruct(PRNearNeighborStructT nnStruct, 
   Int32T nNeighbors = 0;// the number of near neighbors found so far.
   Int32T nMarkedPoints = 0;// the number of marked points
   for(IntT i = 0; i < nnStruct->parameterL; i++){ 
-    TIMEV_START(timeGetBucket);
+    TIMEV_START(timeGetBucket);  //取得桶的时间？？
     GeneralizedPGBucket gbucket;
-    if (!nnStruct->useUfunctions) {
+    if (!nnStruct->useUfunctions) {  //使用独立的g函数
       // Use usual <g> functions (truly independent; <g>s are precisly
       // <u>s).
-      gbucket = getGBucket(nnStruct->hashedBuckets[i], 1, precomputedHashesOfULSHs[i], NULL);
+      gbucket = getGBucket(nnStruct->hashedBuckets[i], 1, precomputedHashesOfULSHs[i], NULL); //取得一个桶
     } else {
-      // Use <u> functions (<g>s are pairs of <u> functions).
+      // Use <u> functions (<g>s are pairs of <u> functions). 此时k=k/2 ,L=M(M-1)/2
       gbucket = getGBucket(nnStruct->hashedBuckets[i], 2, precomputedHashesOfULSHs[firstUComp], precomputedHashesOfULSHs[secondUComp]);
 
       // compute what is the next pair of <u> functions.
       secondUComp++;
       if (secondUComp == nnStruct->nHFTuples) {
-	firstUComp++;
-	secondUComp = firstUComp + 1;
+     	firstUComp++;
+	    secondUComp = firstUComp + 1;
       }
     }
-    TIMEV_END(timeGetBucket);
+    TIMEV_END(timeGetBucket); //取得一个hash表中桶的时间
 
     PGBucketT bucket;
 
-    TIMEV_START(timeCycleBucket);
+    TIMEV_START(timeCycleBucket); 
     switch (nnStruct->hashedBuckets[i]->typeHT){
     case HT_LINKED_LIST:
       bucket = gbucket.llGBucket;
@@ -640,17 +643,17 @@ Int32T getNearNeighborsFromPRNearNeighborStruct(PRNearNeighborStructT nnStruct, 
 	  //TIMEV_START(timeDistanceComputation);
 	  Int32T candidatePIndex = bucketEntry->pointIndex;
 	  PPointT candidatePoint = nnStruct->points[candidatePIndex];
-	  if (isDistanceSqrLeq(nnStruct->dimension, point, candidatePoint, nnStruct->parameterR2) && nnStruct->reportingResult){
+	  if (isDistanceSqrLeq(nnStruct->dimension, point, candidatePoint, nnStruct->parameterR2) && nnStruct->reportingResult){ //距离在阈值内，且结构功能正常
 	    //TIMEV_END(timeDistanceComputation);
 	    if (nnStruct->markedPoints[candidatePIndex] == FALSE) {
 	      //TIMEV_START(timeResultStoring);
 	      // a new R-NN point was found (not yet in <result>).
-	      if (nNeighbors >= resultSize){
+	      if (nNeighbors >= resultSize){  //扩大结果集的空间
 		// run out of space => resize the <result> array.
 		resultSize = 2 * resultSize;
 		result = (PPointT*)REALLOC(result, resultSize * sizeof(PPointT));
 	      }
-	      result[nNeighbors] = candidatePoint;
+	      result[nNeighbors] = candidatePoint;  //将选择的点加入结果集合
 	      nNeighbors++;
 	      nnStruct->markedPointsIndeces[nMarkedPoints] = candidatePIndex;
 	      nnStruct->markedPoints[candidatePIndex] = TRUE; // do not include more points with the same index
@@ -661,7 +664,7 @@ Int32T getNearNeighborsFromPRNearNeighborStruct(PRNearNeighborStructT nnStruct, 
 	    //TIMEV_END(timeDistanceComputation);
 	  }
 	  //TIMEV_START(timeCycleProc);
-	  bucketEntry = bucketEntry->nextEntry;
+	  bucketEntry = bucketEntry->nextEntry; //取下一个桶
 	}
 	//TIMEV_END(timeCycleProc);
       }
@@ -695,7 +698,7 @@ Int32T getNearNeighborsFromPRNearNeighborStruct(PRNearNeighborStructT nnStruct, 
 // 	}
 //       }
       break;
-    case HT_HYBRID_CHAINS:
+    case HT_HYBRID_CHAINS:  //文中用的混合链
       if (gbucket.hybridGBucket != NULL){
 	PHybridChainEntryT hybridPoint = gbucket.hybridGBucket;
 	Uns32T offset = 0;
@@ -724,7 +727,7 @@ Int32T getNearNeighborsFromPRNearNeighborStruct(PRNearNeighborStructT nnStruct, 
 	    nMarkedPoints++;
 
 	    PPointT candidatePoint = nnStruct->points[candidatePIndex];
-	    if (isDistanceSqrLeq(nnStruct->dimension, point, candidatePoint, nnStruct->parameterR2) && nnStruct->reportingResult){
+	    if (isDistanceSqrLeq(nnStruct->dimension, point, candidatePoint, nnStruct->parameterR2) && nnStruct->reportingResult){  //距离要在R2内
 	      //if (nnStruct->markedPoints[candidatePIndex] == FALSE) {
 	      // a new R-NN point was found (not yet in <result>).
 	      //TIMEV_START(timeResultStoring);

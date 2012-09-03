@@ -95,7 +95,7 @@ void readDataSetFromFile(char *filename){
 // Tranforming <memRatiosForNNStructs> from
 // <memRatiosForNNStructs[i]=ratio of mem/total mem> to
 // <memRatiosForNNStructs[i]=ratio of mem/mem left for structs i,i+1,...>.
-void transformMemRatios(){
+void transformMemRatios(){   //这样做的目的是什么？
   RealT sum = 0;
   for(IntT i = nRadii - 1; i >= 0; i--){
     sum += memRatiosForNNStructs[i];
@@ -106,7 +106,7 @@ void transformMemRatios(){
 }
 
 
-int compareInt32T(const void *a, const void *b){
+int compareInt32T(const void *a, const void *b){  //按照由大到小的顺序进行排序
   Int32T *x = (Int32T*)a;
   Int32T *y = (Int32T*)b;
   return (*x > *y) - (*x < *y);
@@ -136,7 +136,7 @@ int main(int nargs, char **args){
   //strtod()会扫描参数nptr字符串，跳过前面的空格字符，直到遇上数字或正负符号才开始做转换
   //，到出现非数字或字符串结束时('')才结束转换， 并将结果返回。
   //若endptr不为NULL，则会将遇到不合条件而终止的nptr中的字符指针由endptr传回。
-  if (thresholdR == 0 || endPtr[1] == args[5]){
+  if (thresholdR == 0 || endPtr[1] == args[5]){ //确保阈值合法
     // The value for R is not specified, instead there is a file
     // specifying multiple R's.
     thresholdR = 0;
@@ -162,7 +162,7 @@ int main(int nargs, char **args){
     memRatiosForNNStructs[0] = 1;      
   }
   //DPRINTF("No. radii: %d\n", nRadii);  //改下文件的输出模式，不要覆盖
-  printf("No.radii:%d\n",nRadii);
+   printf("No.radii:%d\n",nRadii);
   
   //thresholdR = atof(args[5]);
   availableTotalMemory = atoll(args[8]); 
@@ -178,35 +178,39 @@ int main(int nargs, char **args){
 
   Int32T nSampleQueries = N_SAMPLE_QUERY_POINTS;  //100
   PPointT sampleQueries[nSampleQueries];      //对查询点的编号
-  Int32T sampleQBoundaryIndeces[nSampleQueries];
-  if ((nargs < 9) || (strcmp("-c", args[9]) == 0)){
+  Int32T sampleQBoundaryIndeces[nSampleQueries];  //第一个大于半径的点的编号，如果有多个半径的话，就会记录更多。
+  if ((nargs < 9) || (strcmp("-c", args[9]) == 0)){         //计算最优参数
     // In this cases, we need to generate a sample query set for
     // computing the optimal parameters.
 
     // Generate a sample query set.
-    FILE *queryFile = fopen(args[7], "rt");  //打开查询集，以只读文本方式打开
+    FILE *queryFile = fopen(args[7], "rt");        //打开查询集，以只读文本方式打开
     if (strcmp(args[7], ".") == 0 || queryFile == NULL || nQueries <= 0){
-      // Choose several data set points for the sample query points.
+      // Choose several data set points for the sample query points.  如果没有查询点就随机选择几个数据集点作为查询点
       for(IntT i = 0; i < nSampleQueries; i++){
 	   sampleQueries[i] = dataSetPoints[genRandomInt(0, nPoints - 1)];
       }
     }else{
       // Choose several actual query points for the sample query points.
-      nSampleQueries = MIN(nSampleQueries, nQueries);   //9
-      Int32T sampleIndeces[nSampleQueries];     
-      for(IntT i = 0; i < nSampleQueries; i++){            //对查询点做了一下顺序的变化。
-	   sampleIndeces[i] = genRandomInt(0, nQueries - 1);   
+      nSampleQueries = MIN(nSampleQueries, nQueries);   //MIN（100，9）
+      Int32T sampleIndeces[nSampleQueries];             //定义做一个查询点样本索引数组
+	  //为什么要对查询点索引进行随机变化？ 想把样本查询点控制在一定的范围内，如果查询点过多，则样本点最多取100个查询点。
+      for(IntT i = 0; i < nSampleQueries; i++){          //对查询点做了一下顺序的变化。
+	   sampleIndeces[i] = genRandomInt(0, nQueries - 1);  //对查询点的索引做随机处理  
       }
-      qsort(sampleIndeces, nSampleQueries, sizeof(*sampleIndeces), compareInt32T);
+	  // 根据你给的比较条件进行快速排序，通过指针的移动实验排序，排序之后的结果仍然放在原数组中，必须自己写一个比较函数
+	  //http://www.slyar.com/blog/stdlib-qsort.html qsort(数组起始地址，数组元素大小，每个元素的大小，函数指针指向比较函数)
+      qsort(sampleIndeces, nSampleQueries, sizeof(*sampleIndeces), compareInt32T);    //qsort，C语言标准库函数，对样本查询点的索引值进行排序
+				
       //printIntVector("sampleIndeces: ", nSampleQueries, sampleIndeces);
       Int32T j = 0;
       for(Int32T i = 0; i < nQueries; i++){
-	if (i == sampleIndeces[j]){   //如果样本查询点与随机查新点冲突
+	if (i == sampleIndeces[j]){               //如果样本查询点的索引值与实际查询点的索引值一致，读入点
 	  sampleQueries[j] = readPoint(queryFile);
 	  j++;
-	  while (i == sampleIndeces[j]){    
-	    sampleQueries[j] = sampleQueries[j - 1];  //覆盖新产生的查询点
-	    j++;
+	  while (i == sampleIndeces[j]){    // 如果样本查询点之后的索引值依旧与 实际查询点的索引值一致，则直接将此点的值赋值给后面一点的值
+	    sampleQueries[j] = sampleQueries[j - 1];  //覆盖之后索引点的值
+	    j++; //索引点像后面移
 	  }
 	}else{
 	  fscanf(queryFile, "%[^\n]", sBuffer);
@@ -219,68 +223,70 @@ int main(int nargs, char **args){
 
     // Compute the array sampleQBoundaryIndeces that specifies how to
     // segregate the sample query points according to their distance
-    // to NN.
-    sortQueryPointsByRadii(pointsDimension,
-			   nSampleQueries,
-			   sampleQueries,
-			   nPoints,
-			   dataSetPoints,
-			   nRadii,
-			   listOfRadii,
+    // to NN.  //边界sampleQBoundaryIndeces只会存取一个点的索引，该点的大小为第一个大于半径点的值
+    sortQueryPointsByRadii(pointsDimension,  
+			   nSampleQueries,   //查询集的点的个数
+			   sampleQueries,  //查询点的集合，函数运行完成后，点的值将以离数据集合的距离由小到大
+					//的顺序排序。
+			   nPoints,    //数据集点的个数
+			   dataSetPoints,  //数据集集合
+			   nRadii,     //半径的个数
+			   listOfRadii,   //所有的个数
 			   sampleQBoundaryIndeces);
   }
-
+ //之前的东西-c运行的，-p是不会运行的。
   RNNParametersT *algParameters = NULL;
   PRNearNeighborStructT *nnStructs = NULL;
   if (nargs > 9) {
     // Additional command-line parameter is specified.
     if (strcmp("-c", args[9]) == 0) {
-      // Only compute the R-NN DS parameters and output them to stdout.
+      // Only compute the R-NN DS parameters and output them to stdout. // 如果是-c，就只计算数据集参数，然后输出
       
-      printf("%d\n", nRadii);   //打印出半径的个数：1个。
-      transformMemRatios();
-      for(IntT i = 0; i < nRadii; i++){
+      printf("%d\n", nRadii);   //打印出半径的个数：1个。 将写入到参数文件中，
+      transformMemRatios();     //memRatiosForNNstructs,转换内存使用率。假设每个结构为1，每个半径占用的总内存的比率，用于计算内存
+      for(IntT i = 0; i < nRadii; i++){  //看使用哪个样本查询点
 	// which sample queries to use
-	Int32T segregatedQStart = (i == 0) ? 0 : sampleQBoundaryIndeces[i - 1];
-	Int32T segregatedQNumber = nSampleQueries - segregatedQStart;
-	if (segregatedQNumber == 0) {
+	Int32T segregatedQStart = (i == 0) ? 0 : sampleQBoundaryIndeces[i - 1];  //起始点的位置
+	Int32T segregatedQNumber = nSampleQueries - segregatedQStart;   //查询点的个数
+	if (segregatedQNumber == 0) {      //如果计算所得查询点的个数为0，就查询所有的点，从0 到最后
 	  // XXX: not the right answer
 	  segregatedQNumber = nSampleQueries;
 	  segregatedQStart = 0;
 	}
-	ASSERT(segregatedQStart < nSampleQueries);
+	ASSERT(segregatedQStart < nSampleQueries);  
 	ASSERT(segregatedQStart >= 0);
-	ASSERT(segregatedQStart + segregatedQNumber <= nSampleQueries);
-	ASSERT(segregatedQNumber >= 0);
-	RNNParametersT optParameters = computeOptimalParameters(listOfRadii[i],
+	ASSERT(segregatedQStart + segregatedQNumber <= nSampleQueries);  //查询编号总数要小于查询样本点总数
+	ASSERT(segregatedQNumber >= 0);               
+	RNNParametersT optParameters = computeOptimalParameters(listOfRadii[i],  //计算最优的运行时间，根据最优的最
 								successProbability,
 								nPoints,
 								pointsDimension,
 								dataSetPoints,
 								segregatedQNumber,
 								sampleQueries + segregatedQStart,
-								(MemVarT)((availableTotalMemory - totalAllocatedMemory) * memRatiosForNNStructs[i]));
-	printRNNParameters(stdout, optParameters);
+								(MemVarT)((availableTotalMemory - totalAllocatedMemory) * memRatiosForNNStructs[i]));  //比率
+									//memRatioForNNStructs[i]：近邻结构体每个半径所占用的内存比率，计算能用多少内存
+	printRNNParameters(stdout, optParameters); // 将参数打印出来
       }
       exit(0);
     } else if (strcmp("-p", args[9]) == 0) {
       // Read the R-NN DS parameters from the given file and run the
       // queries on the constructed data structure.
       if (nargs < 10){
-	usage(args[0]);
-	exit(1);
+	         usage(args[0]);
+	         exit(1);
       }
-      FILE *pFile = fopen(args[10], "rt");
+      FILE *pFile = fopen(args[10], "rt");   //读取参数文件，由lsh_computeParas产生
       FAILIFWR(pFile == NULL, "Could not open the params file.");
-      fscanf(pFile, "%d\n", &nRadii);
-      DPRINTF1("Using the following R-NN DS parameters:\n");
-      DPRINTF("N radii = %d\n", nRadii);
+      fscanf(pFile, "%d\n", &nRadii);  //这里只取了参数文件中的半径，那参数文件中的其他数据怎样被取用的？？
+      DPRINTF1("Using the following R-NN DS parameters:\n");  //使用R-NN DS(DateSet)参数
+      DPRINTF("N radii = %d\n", nRadii);  //不知道将数据输出到哪里了？？
       FAILIF(NULL == (nnStructs = (PRNearNeighborStructT*)MALLOC(nRadii * sizeof(PRNearNeighborStructT))));
       FAILIF(NULL == (algParameters = (RNNParametersT*)MALLOC(nRadii * sizeof(RNNParametersT))));
-      for(IntT i = 0; i < nRadii; i++){
-	algParameters[i] = readRNNParameters(pFile);
-	printRNNParameters(stderr, algParameters[i]);
-	nnStructs[i] = initLSH_WithDataSet(algParameters[i], nPoints, dataSetPoints);
+      for(IntT i = 0; i < nRadii; i++){ 
+       	algParameters[i] = readRNNParameters(pFile);
+     	printRNNParameters(stderr, algParameters[i]); //将参数信息，输出到屏幕上
+    	nnStructs[i] = initLSH_WithDataSet(algParameters[i], nPoints, dataSetPoints);  //根据用户输入的参数，初始化结构
       }
 
       pointsDimension = algParameters[0].dimension;
@@ -329,7 +335,7 @@ int main(int nargs, char **args){
     // read in the query point.
     for(IntT d = 0; d < pointsDimension; d++){
       FSCANF_REAL(queryFile, &(queryPoint->coordinates[d]));
-      sqrLength += SQR(queryPoint->coordinates[d]);
+      sqrLength += SQR(queryPoint->coordinates[d]);//向量到原点的距离
     }
     queryPoint->sqrLength = sqrLength;
     //printRealVector("Query: ", pointsDimension, queryPoint->coordinates);

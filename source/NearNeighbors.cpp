@@ -43,10 +43,10 @@ void checkDataTypes(){
   necessary sanity checks (e.g., data types sizes).
  */
 void initializeLSHGlobal(){
-  checkDataTypes();
+  checkDataTypes();   //检查数据类型是否符合
 
   // Initialize global variables
-  timingOn = TRUE;
+  timingOn = TRUE;  
 
   // Initialize timings.
   tuneTimeFunctions();
@@ -137,8 +137,8 @@ PRNearNeighborStructT initSelfTunedRNearNeighborWithDataSet(RealT thresholdR,
   return nnStruct;
 }
 
-Int32T getRNearNeighbors(PRNearNeighborStructT nnStruct, PPointT queryPoint, PPointT *(&result), Int32T &resultSize){
-  DPRINTF("Estimated ULSH comp: %0.6lf\n", lshPrecomp * nnStruct->nHFTuples * nnStruct->hfTuplesLength);
+Int32T getRNearNeighbors(PRNearNeighborStructT nnStruct, PPointT queryPoint, PPointT *(&result), Int32T &resultSize){  //近邻结构、查询点、结果集、结果集大小
+  DPRINTF("Estimated ULSH comp: %0.6lf\n", lshPrecomp * nnStruct->nHFTuples * nnStruct->hfTuplesLength); //预处理时间×L×K
   DPRINTF("Estimated UH overhead: %0.6lf\n", uhashOver * nnStruct->nHFTuples);
 //   RealT estNColls = estimateNCollisions(nnStruct->nPoints, 
 // 					nnStruct->dimension, 
@@ -163,10 +163,10 @@ Int32T getRNearNeighbors(PRNearNeighborStructT nnStruct, PPointT queryPoint, PPo
   timeRNNQuery = 0;
   timeComputeULSH = 0;
   timeGetBucket = 0;
-  timeCycleBucket = 0;
+  timeCycleBucket = 0;  //遍历整个桶的时间
   timeDistanceComputation = 0;
   timeResultStoring = 0;
-  timeCycleProc = 0;
+  timeCycleProc = 0;  //遍历整个过程的时间
   timePrecomputeHash = 0;
   timeGBHash = 0;
   timeChainTraversal = 0;
@@ -175,7 +175,7 @@ Int32T getRNearNeighbors(PRNearNeighborStructT nnStruct, PPointT queryPoint, PPo
 
   TIMEV_START(timeRNNQuery);
   noExpensiveTiming = !DEBUG_PROFILE_TIMING;
-  Int32T nNearNeighbors = getNearNeighborsFromPRNearNeighborStruct(nnStruct, queryPoint, result, resultSize);
+  Int32T nNearNeighbors = getNearNeighborsFromPRNearNeighborStruct(nnStruct, queryPoint, result, resultSize); //
   TIMEV_END(timeRNNQuery);
 
   DPRINTF("Time to compute LSH: %0.6lf\n", timeComputeULSH);
@@ -188,7 +188,7 @@ Int32T getRNearNeighbors(PRNearNeighborStructT nnStruct, PPointT queryPoint, PPo
   DPRINTF("Time to store result: %0.6lf\n", timeResultStoring);
   //printf("Time for cycle processing: %0.6lf\n", timeCycleProc);
   //printf("Time for precomputing hashes: %0.6lf\n", timePrecomputeHash);
-  //printf("Time for GB hash: %0.6lf\n", timeGBHash);
+  //printf("Time for GB hash: %0.6lf\n", timeGBHash);   //GBHash是什么意思？？
   //printf("Time for traversal of chains: %0.6lf\n", timeChainTraversal);
   DPRINTF("Number of dist comps: %d\n", nOfDistComps);
   DPRINTF("Number buckets in chains: %d\n", nBucketsInChains);
