@@ -68,7 +68,7 @@ inline PPointT readPoint(FILE *fileHandle){
     FSCANF_REAL(fileHandle, &(p->coordinates[d]));
     sqrLength += SQR(p->coordinates[d]);
   }
-  fscanf(fileHandle, "%[^\n]", sBuffer);    //遇到\n就不读取了。
+  fscanf(fileHandle, "%[^\n]", sBuffer);    //锟斤拷锟斤拷\n锟酵诧拷锟斤拷取锟剿★拷
   p->index = -1;
   p->sqrLength = sqrLength;
   return p;
@@ -95,7 +95,7 @@ void readDataSetFromFile(char *filename){
 // Tranforming <memRatiosForNNStructs> from
 // <memRatiosForNNStructs[i]=ratio of mem/total mem> to
 // <memRatiosForNNStructs[i]=ratio of mem/mem left for structs i,i+1,...>.
-void transformMemRatios(){   //这样做的目的是什么？
+void transformMemRatios(){   //绠楀嚭瀵规瘡涓崐寰勭敤浜庡瓨鍌ㄧ粨鏋勬墍鍗犲唴瀛樼殑姣斾緥
   RealT sum = 0;
   for(IntT i = nRadii - 1; i >= 0; i--){
     sum += memRatiosForNNStructs[i];
@@ -106,7 +106,7 @@ void transformMemRatios(){   //这样做的目的是什么？
 }
 
 
-int compareInt32T(const void *a, const void *b){  //按照由大到小的顺序进行排序
+int compareInt32T(const void *a, const void *b){  //锟斤拷锟斤拷锟缴达拷锟斤拷小锟斤拷顺锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷
   Int32T *x = (Int32T*)a;
   Int32T *y = (Int32T*)b;
   return (*x > *y) - (*x < *y);
@@ -132,11 +132,11 @@ int main(int nargs, char **args){
   pointsDimension = atoi(args[3]);
   successProbability = atof(args[4]);
   char* endPtr[1];
-  RealT thresholdR = strtod(args[5], endPtr);  //strtod将字符串转换成浮点数   //r=0.6
-  //strtod()会扫描参数nptr字符串，跳过前面的空格字符，直到遇上数字或正负符号才开始做转换
-  //，到出现非数字或字符串结束时('')才结束转换， 并将结果返回。
-  //若endptr不为NULL，则会将遇到不合条件而终止的nptr中的字符指针由endptr传回。
-  if (thresholdR == 0 || endPtr[1] == args[5]){ //确保阈值合法
+  RealT thresholdR = strtod(args[5], endPtr);  //strtod锟斤拷锟街凤拷锟斤拷转锟斤拷锟缴革拷锟斤拷锟斤拷   //r=0.6
+  //strtod()锟斤拷扫锟斤拷锟斤拷锟斤拷nptr锟街凤拷锟斤拷锟斤拷锟斤拷锟斤拷前锟斤拷锟侥空革拷锟街凤拷锟斤拷直锟斤拷锟斤拷锟斤拷锟斤拷锟街伙拷锟斤拷锟斤拷锟斤拷锟脚才匡拷始锟斤拷转锟斤拷
+  //锟斤拷锟斤拷锟斤拷锟街凤拷锟斤拷锟街伙拷锟街凤拷锟斤拷锟斤拷锟斤拷时('')锟脚斤拷锟斤拷转锟斤拷锟斤拷 锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟截★拷
+  //锟斤拷endptr锟斤拷为NULL锟斤拷锟斤拷锟结将锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷止锟斤拷nptr锟叫碉拷锟街凤拷指锟斤拷锟斤拷endptr锟斤拷锟截★拷
+  if (thresholdR == 0 || endPtr[1] == args[5]){ //确锟斤拷锟斤拷值锟较凤拷
     // The value for R is not specified, instead there is a file
     // specifying multiple R's.
     thresholdR = 0;
@@ -155,13 +155,13 @@ int main(int nargs, char **args){
       ASSERT(memRatiosForNNStructs[i] > 0);
     }
   }else{
-    nRadii = 1;  //半径的个数
+    nRadii = 1;  //锟诫径锟侥革拷锟斤拷
     FAILIF(NULL == (listOfRadii = (RealT*)MALLOC(nRadii * sizeof(RealT))));
     FAILIF(NULL == (memRatiosForNNStructs = (RealT*)MALLOC(nRadii * sizeof(RealT))));
     listOfRadii[0] = thresholdR;    //r=0.6
     memRatiosForNNStructs[0] = 1;      
   }
-  //DPRINTF("No. radii: %d\n", nRadii);  //改下文件的输出模式，不要覆盖
+  //DPRINTF("No. radii: %d\n", nRadii);  //锟斤拷锟斤拷锟侥硷拷锟斤拷锟斤拷锟斤拷模式锟斤拷锟斤拷要锟斤拷锟斤拷
    printf("No.radii:%d\n",nRadii);
   
   //thresholdR = atof(args[5]);
@@ -173,44 +173,44 @@ int main(int nargs, char **args){
     exit(1);
   }
 
-  readDataSetFromFile(args[6]);   //数据集的文件名
+  readDataSetFromFile(args[6]);   //锟斤拷锟捷硷拷锟斤拷锟侥硷拷锟斤拷
   DPRINTF("Allocated memory (after reading data set): %lld\n", totalAllocatedMemory);
 
   Int32T nSampleQueries = N_SAMPLE_QUERY_POINTS;  //100
-  PPointT sampleQueries[nSampleQueries];      //对查询点的编号
-  Int32T sampleQBoundaryIndeces[nSampleQueries];  //第一个大于半径的点的编号，如果有多个半径的话，就会记录更多。
-  if ((nargs < 9) || (strcmp("-c", args[9]) == 0)){         //计算最优参数
+  PPointT sampleQueries[nSampleQueries];      //锟皆诧拷询锟斤拷锟侥憋拷锟斤拷
+  Int32T sampleQBoundaryIndeces[nSampleQueries];  //锟斤拷一锟斤拷锟斤拷锟节半径锟侥碉拷锟侥憋拷锟脚ｏ拷锟斤拷锟斤拷锟叫讹拷锟斤拷锟诫径锟侥伙拷锟斤拷锟酵伙拷锟斤拷录锟斤拷锟洁。
+  if ((nargs < 9) || (strcmp("-c", args[9]) == 0)){         //锟斤拷锟斤拷锟斤拷锟脚诧拷锟斤拷
     // In this cases, we need to generate a sample query set for
     // computing the optimal parameters.
 
     // Generate a sample query set.
-    FILE *queryFile = fopen(args[7], "rt");        //打开查询集，以只读文本方式打开
+    FILE *queryFile = fopen(args[7], "rt");        //锟津开诧拷询锟斤拷锟斤拷锟斤拷只锟斤拷锟侥憋拷锟斤拷式锟斤拷锟斤拷
     if (strcmp(args[7], ".") == 0 || queryFile == NULL || nQueries <= 0){
-      // Choose several data set points for the sample query points.  如果没有查询点就随机选择几个数据集点作为查询点
+      // Choose several data set points for the sample query points.  锟斤拷锟斤拷没锟叫诧拷询锟斤拷锟斤拷锟斤拷锟斤拷选锟今几革拷锟斤拷锟捷硷拷锟斤拷锟斤拷为锟斤拷询锟斤拷
       for(IntT i = 0; i < nSampleQueries; i++){
 	   sampleQueries[i] = dataSetPoints[genRandomInt(0, nPoints - 1)];
       }
     }else{
       // Choose several actual query points for the sample query points.
-      nSampleQueries = MIN(nSampleQueries, nQueries);   //MIN（100，9）
-      Int32T sampleIndeces[nSampleQueries];             //定义做一个查询点样本索引数组
-	  //为什么要对查询点索引进行随机变化？ 想把样本查询点控制在一定的范围内，如果查询点过多，则样本点最多取100个查询点。
-      for(IntT i = 0; i < nSampleQueries; i++){          //对查询点做了一下顺序的变化。
-	   sampleIndeces[i] = genRandomInt(0, nQueries - 1);  //对查询点的索引做随机处理  
+      nSampleQueries = MIN(nSampleQueries, nQueries);   //MIN锟斤拷100锟斤拷9锟斤拷
+      Int32T sampleIndeces[nSampleQueries];             //锟斤拷锟斤拷锟斤拷一锟斤拷锟斤拷询锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷
+	  //为什么要锟皆诧拷询锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟戒化锟斤拷 锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷询锟斤拷锟斤拷锟斤拷锟斤拷一锟斤拷锟侥凤拷围锟节ｏ拷锟斤拷锟斤拷锟斤拷询锟斤拷锟斤拷锟洁，锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷取100锟斤拷锟斤拷询锟姐。
+      for(IntT i = 0; i < nSampleQueries; i++){          //锟皆诧拷询锟斤拷锟斤拷锟斤拷一锟斤拷顺锟斤拷锟侥变化锟斤拷
+	   sampleIndeces[i] = genRandomInt(0, nQueries - 1);  //锟皆诧拷询锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷  
       }
-	  // 根据你给的比较条件进行快速排序，通过指针的移动实验排序，排序之后的结果仍然放在原数组中，必须自己写一个比较函数
-	  //http://www.slyar.com/blog/stdlib-qsort.html qsort(数组起始地址，数组元素大小，每个元素的大小，函数指针指向比较函数)
-      qsort(sampleIndeces, nSampleQueries, sizeof(*sampleIndeces), compareInt32T);    //qsort，C语言标准库函数，对样本查询点的索引值进行排序
+	  // 锟斤拷锟斤拷锟斤拷锟斤拷锟侥比斤拷锟斤拷锟斤拷锟斤拷锟叫匡拷锟斤拷锟斤拷锟斤拷锟斤拷通锟斤拷指锟斤拷锟斤拷锟狡讹拷实锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷之锟斤拷锟侥斤拷锟斤拷锟斤拷然锟斤拷锟斤拷原锟斤拷锟斤拷锟叫ｏ拷锟斤拷锟斤拷锟皆硷拷写一锟斤拷锟饺较猴拷锟斤拷
+	  //http://www.slyar.com/blog/stdlib-qsort.html qsort(锟斤拷锟斤拷锟斤拷始锟斤拷址锟斤拷锟斤拷锟斤拷元锟截达拷小锟斤拷每锟斤拷元锟截的达拷小锟斤拷锟斤拷锟斤拷指锟斤拷指锟斤拷锟饺较猴拷锟斤拷)
+      qsort(sampleIndeces, nSampleQueries, sizeof(*sampleIndeces), compareInt32T);    //qsort锟斤拷C锟斤拷锟皆憋拷准锟解函锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷询锟斤拷锟斤拷锟斤拷锟斤拷值锟斤拷锟斤拷锟斤拷锟斤拷
 				
       //printIntVector("sampleIndeces: ", nSampleQueries, sampleIndeces);
       Int32T j = 0;
       for(Int32T i = 0; i < nQueries; i++){
-	if (i == sampleIndeces[j]){               //如果样本查询点的索引值与实际查询点的索引值一致，读入点
+	if (i == sampleIndeces[j]){               //锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷询锟斤拷锟斤拷锟斤拷锟斤拷值锟斤拷实锟绞诧拷询锟斤拷锟斤拷锟斤拷锟斤拷值一锟铰ｏ拷锟斤拷锟斤拷锟斤拷
 	  sampleQueries[j] = readPoint(queryFile);
 	  j++;
-	  while (i == sampleIndeces[j]){    // 如果样本查询点之后的索引值依旧与 实际查询点的索引值一致，则直接将此点的值赋值给后面一点的值
-	    sampleQueries[j] = sampleQueries[j - 1];  //覆盖之后索引点的值
-	    j++; //索引点像后面移
+	  while (i == sampleIndeces[j]){    // 锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷询锟斤拷之锟斤拷锟斤拷锟斤拷锟斤拷值锟斤拷锟斤拷锟斤拷 实锟绞诧拷询锟斤拷锟斤拷锟斤拷锟斤拷值一锟铰ｏ拷锟斤拷直锟接斤拷锟剿碉拷锟斤拷值锟斤拷值锟斤拷锟斤拷锟斤拷一锟斤拷锟斤拷值
+	    sampleQueries[j] = sampleQueries[j - 1];  //锟斤拷锟斤拷之锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷值
+	    j++; //锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷
 	  }
 	}else{
 	  fscanf(queryFile, "%[^\n]", sBuffer);
@@ -223,50 +223,50 @@ int main(int nargs, char **args){
 
     // Compute the array sampleQBoundaryIndeces that specifies how to
     // segregate the sample query points according to their distance
-    // to NN.  //边界sampleQBoundaryIndeces只会存取一个点的索引，该点的大小为第一个大于半径点的值
+    // to NN.  //锟竭斤拷sampleQBoundaryIndeces只锟斤拷锟斤拷取一锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟矫碉拷锟侥达拷小为锟斤拷一锟斤拷锟斤拷锟节半径锟斤拷锟斤拷值
     sortQueryPointsByRadii(pointsDimension,  
-			   nSampleQueries,   //查询集的点的个数
-			   sampleQueries,  //查询点的集合，函数运行完成后，点的值将以离数据集合的距离由小到大
-					//的顺序排序。
-			   nPoints,    //数据集点的个数
-			   dataSetPoints,  //数据集集合
-			   nRadii,     //半径的个数
-			   listOfRadii,   //所有的个数
+			   nSampleQueries,   //锟斤拷询锟斤拷锟侥碉拷锟侥革拷锟斤拷
+			   sampleQueries,  //锟斤拷询锟斤拷锟侥硷拷锟较ｏ拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟缴后，碉拷锟斤拷值锟斤拷锟斤拷锟斤拷锟斤拷锟捷硷拷锟较的撅拷锟斤拷锟斤拷小锟斤拷锟斤拷
+					//锟斤拷顺锟斤拷锟斤拷锟斤拷锟斤拷
+			   nPoints,    //锟斤拷锟捷硷拷锟斤拷锟侥革拷锟斤拷
+			   dataSetPoints,  //锟斤拷锟捷硷拷锟斤拷锟斤拷
+			   nRadii,     //锟诫径锟侥革拷锟斤拷
+			   listOfRadii,   //锟斤拷锟叫的革拷锟斤拷
 			   sampleQBoundaryIndeces);
   }
- //之前的东西-c运行的，-p是不会运行的。
+ //之前锟侥讹拷锟斤拷-c锟斤拷锟叫的ｏ拷-p锟角诧拷锟斤拷锟斤拷锟叫的★拷
   RNNParametersT *algParameters = NULL;
   PRNearNeighborStructT *nnStructs = NULL;
   if (nargs > 9) {
     // Additional command-line parameter is specified.
     if (strcmp("-c", args[9]) == 0) {
-      // Only compute the R-NN DS parameters and output them to stdout. // 如果是-c，就只计算数据集参数，然后输出
+      // Only compute the R-NN DS parameters and output them to stdout. // 锟斤拷锟斤拷锟斤拷-c锟斤拷锟斤拷只锟斤拷锟斤拷锟斤拷锟捷硷拷锟斤拷锟斤拷锟斤拷然锟斤拷锟斤拷锟斤拷
       
-      printf("%d\n", nRadii);   //打印出半径的个数：1个。 将写入到参数文件中，
-      transformMemRatios();     //memRatiosForNNstructs,转换内存使用率。假设每个结构为1，每个半径占用的总内存的比率，用于计算内存
-      for(IntT i = 0; i < nRadii; i++){  //看使用哪个样本查询点
+      printf("%d\n", nRadii);   //锟斤拷印锟斤拷锟诫径锟侥革拷锟斤拷锟斤拷1锟斤拷锟斤拷 锟斤拷写锟诫到锟斤拷锟斤拷锟侥硷拷锟叫ｏ拷
+      transformMemRatios();     //memRatiosForNNstructs,转锟斤拷锟节达拷使锟斤拷锟绞★拷锟斤拷锟斤拷每锟斤拷锟结构为1锟斤拷每锟斤拷锟诫径占锟矫碉拷锟斤拷锟节达拷锟侥憋拷锟绞ｏ拷锟斤拷锟节硷拷锟斤拷锟节达拷
+      for(IntT i = 0; i < nRadii; i++){  //锟斤拷使锟斤拷锟侥革拷锟斤拷锟斤拷锟斤拷询锟斤拷
 	// which sample queries to use
-	Int32T segregatedQStart = (i == 0) ? 0 : sampleQBoundaryIndeces[i - 1];  //起始点的位置
-	Int32T segregatedQNumber = nSampleQueries - segregatedQStart;   //查询点的个数
-	if (segregatedQNumber == 0) {      //如果计算所得查询点的个数为0，就查询所有的点，从0 到最后
+	Int32T segregatedQStart = (i == 0) ? 0 : sampleQBoundaryIndeces[i - 1];  //锟斤拷始锟斤拷锟斤拷位锟斤拷
+	Int32T segregatedQNumber = nSampleQueries - segregatedQStart;   //锟斤拷询锟斤拷锟侥革拷锟斤拷
+	if (segregatedQNumber == 0) {      //锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟矫诧拷询锟斤拷锟侥革拷锟斤拷为0锟斤拷锟酵诧拷询锟斤拷锟叫的点，锟斤拷0 锟斤拷锟斤拷锟斤拷
 	  // XXX: not the right answer
 	  segregatedQNumber = nSampleQueries;
 	  segregatedQStart = 0;
 	}
 	ASSERT(segregatedQStart < nSampleQueries);  
 	ASSERT(segregatedQStart >= 0);
-	ASSERT(segregatedQStart + segregatedQNumber <= nSampleQueries);  //查询编号总数要小于查询样本点总数
+	ASSERT(segregatedQStart + segregatedQNumber <= nSampleQueries);  //锟斤拷询锟斤拷锟斤拷锟斤拷锟斤拷要小锟节诧拷询锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷
 	ASSERT(segregatedQNumber >= 0);               
-	RNNParametersT optParameters = computeOptimalParameters(listOfRadii[i],  //计算最优的运行时间，根据最优的最
+	RNNParametersT optParameters = computeOptimalParameters(listOfRadii[i],  //锟斤拷锟斤拷锟斤拷锟脚碉拷锟斤拷锟斤拷时锟戒，锟斤拷锟斤拷锟斤拷锟脚碉拷锟斤拷
 								successProbability,
 								nPoints,
 								pointsDimension,
 								dataSetPoints,
 								segregatedQNumber,
 								sampleQueries + segregatedQStart,
-								(MemVarT)((availableTotalMemory - totalAllocatedMemory) * memRatiosForNNStructs[i]));  //比率
-									//memRatioForNNStructs[i]：近邻结构体每个半径所占用的内存比率，计算能用多少内存
-	printRNNParameters(stdout, optParameters); // 将参数打印出来
+								(MemVarT)((availableTotalMemory - totalAllocatedMemory) * memRatiosForNNStructs[i]));  //锟斤拷锟斤拷
+									//memRatioForNNStructs[i]锟斤拷锟斤拷锟节结构锟斤拷每锟斤拷锟诫径锟斤拷占锟矫碉拷锟节达拷锟斤拷锟绞ｏ拷锟斤拷锟斤拷锟斤拷锟矫讹拷锟斤拷锟节达拷
+	printRNNParameters(stdout, optParameters); // 锟斤拷锟斤拷锟斤拷锟斤拷印锟斤拷锟斤拷
       }
       exit(0);
     } else if (strcmp("-p", args[9]) == 0) {
@@ -276,17 +276,17 @@ int main(int nargs, char **args){
 	         usage(args[0]);
 	         exit(1);
       }
-      FILE *pFile = fopen(args[10], "rt");   //读取参数文件，由lsh_computeParas产生
+      FILE *pFile = fopen(args[10], "rt");   //锟斤拷取锟斤拷锟斤拷锟侥硷拷锟斤拷锟斤拷lsh_computeParas锟斤拷锟斤拷
       FAILIFWR(pFile == NULL, "Could not open the params file.");
-      fscanf(pFile, "%d\n", &nRadii);  //这里只取了参数文件中的半径，那参数文件中的其他数据怎样被取用的？？
-      DPRINTF1("Using the following R-NN DS parameters:\n");  //使用R-NN DS(DateSet)参数
-      DPRINTF("N radii = %d\n", nRadii);  //不知道将数据输出到哪里了？？
+      fscanf(pFile, "%d\n", &nRadii);  //锟斤拷锟斤拷只取锟剿诧拷锟斤拷锟侥硷拷锟叫的半径锟斤拷锟角诧拷锟斤拷锟侥硷拷锟叫碉拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷取锟矫的ｏ拷锟斤拷
+      DPRINTF1("Using the following R-NN DS parameters:\n");  //使锟斤拷R-NN DS(DateSet)锟斤拷锟斤拷
+      DPRINTF("N radii = %d\n", nRadii);  //锟斤拷知锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟剿ｏ拷锟斤拷
       FAILIF(NULL == (nnStructs = (PRNearNeighborStructT*)MALLOC(nRadii * sizeof(PRNearNeighborStructT))));
       FAILIF(NULL == (algParameters = (RNNParametersT*)MALLOC(nRadii * sizeof(RNNParametersT))));
       for(IntT i = 0; i < nRadii; i++){ 
        	algParameters[i] = readRNNParameters(pFile);
-     	printRNNParameters(stderr, algParameters[i]); //将参数信息，输出到屏幕上
-    	nnStructs[i] = initLSH_WithDataSet(algParameters[i], nPoints, dataSetPoints);  //根据用户输入的参数，初始化结构
+     	printRNNParameters(stderr, algParameters[i]); //锟斤拷锟斤拷锟斤拷锟斤拷息锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷幕锟斤拷
+    	nnStructs[i] = initLSH_WithDataSet(algParameters[i], nPoints, dataSetPoints);  //锟斤拷锟斤拷锟矫伙拷锟斤拷锟斤拷锟侥诧拷锟斤拷锟斤拷锟斤拷始锟斤拷锟结构
       }
 
       pointsDimension = algParameters[0].dimension;
@@ -335,7 +335,7 @@ int main(int nargs, char **args){
     // read in the query point.
     for(IntT d = 0; d < pointsDimension; d++){
       FSCANF_REAL(queryFile, &(queryPoint->coordinates[d]));
-      sqrLength += SQR(queryPoint->coordinates[d]);//向量到原点的距离
+      sqrLength += SQR(queryPoint->coordinates[d]);//锟斤拷锟斤拷锟斤拷原锟斤拷锟侥撅拷锟斤拷
     }
     queryPoint->sqrLength = sqrLength;
     //printRealVector("Query: ", pointsDimension, queryPoint->coordinates);
@@ -344,24 +344,24 @@ int main(int nargs, char **args){
     IntT nNNs = 0;
     for(IntT r = 0; r < nRadii; r++){
       nNNs = getRNearNeighbors(nnStructs[r], queryPoint, result, resultSize);
-      printf("Total time for R-NN query at radius %0.6lf (radius no. %d):\t%0.6lf\n", (double)(listOfRadii[r]), r, timeRNNQuery);  //打印出查询时间
+      printf("Total time for R-NN query at radius %0.6lf (radius no. %d):\t%0.6lf\n", (double)(listOfRadii[r]), r, timeRNNQuery);  //锟斤拷印锟斤拷锟斤拷询时锟斤拷
       meanQueryTime += timeRNNQuery;
 
       if (nNNs > 0){
 	printf("Query point %d: found %d NNs at distance %0.6lf (%dth radius). First %d NNs are:\n", i, nNNs, (double)(listOfRadii[r]), r, MIN(nNNs, MAX_REPORTED_POINTS));
-	//打印查询点与近似点的距离
+	//锟斤拷印锟斤拷询锟斤拷锟斤拷锟斤拷锟狡碉拷锟侥撅拷锟斤拷
 	// compute the distances to the found NN, and sort according to the distance
 	FAILIF(NULL == (distToNN = (PPointAndRealTStructT*)REALLOC(distToNN, nNNs * sizeof(*distToNN))));
 	for(IntT p = 0; p < nNNs; p++){
 	  distToNN[p].ppoint = result[p];
 	  distToNN[p].real = distance(pointsDimension, queryPoint, result[p]);
 	}
-	qsort(distToNN, nNNs, sizeof(*distToNN), comparePPointAndRealTStructT);   //C语言标准的函数
+	qsort(distToNN, nNNs, sizeof(*distToNN), comparePPointAndRealTStructT);   //C锟斤拷锟皆憋拷准锟侥猴拷锟斤拷
 
 	// Print the points
 	for(IntT j = 0; j < MIN(nNNs, MAX_REPORTED_POINTS); j++){
 	  ASSERT(distToNN[j].ppoint != NULL);
-	  printf("%09d\tDistance:%0.6lf\n", distToNN[j].ppoint->index, distToNN[j].real);   //打印点的坐标
+	  printf("%09d\tDistance:%0.6lf\n", distToNN[j].ppoint->index, distToNN[j].real);   //锟斤拷印锟斤拷锟斤拷锟斤拷锟斤拷
 	  CR_ASSERT(distToNN[j].real <= listOfRadii[r]);
 	  //DPRINTF("Distance: %lf\n", distance(pointsDimension, queryPoint, result[j]));
 	  //printRealVector("NN: ", pointsDimension, result[j]->coordinates);
